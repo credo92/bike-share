@@ -1,5 +1,5 @@
-import React from 'react';
-import { connect } from 'react-redux';
+import React, {useState, useEffect} from 'react';
+import { useDispatch, useSelector} from 'react-redux';
 import { getData } from "../actions";
 
 import Header from '../components/Header/Header';
@@ -24,46 +24,43 @@ const COUNTRIES = [
 ]
 // TEST DATA
 
-class AppContainer extends React.Component {
-    state = {
-        selected: 'us' // default,
-    }
+const AppContainer = ()=> {
+    const [selected,setSelected] = useState('ca');
+    const dispatch = useDispatch()
 
-    setCountry = (selected) => {
-        this.setState({
-            selected
-        })
-    }
+    const { data, loading, error } = useSelector(state => ({
+        data: state.data,
+        loading: state.loading,
+        error: state.error,
+      }));
 
-    createButtons = () => {
+    const setCountry = (selected) => {
+        setSelected(selected);
+    }
+    const createButtons = () => {
         return COUNTRIES.map(country =>
             <Button
                 key={country}
                 countryCode={country}
-                selected={this.state.selected}
-                handleClick={this.handleClick}
+                selected={selected}
+                handleClick={handleClick}
             />)
     }
-
-    handleClick = (clickedCountry) => {
-        this.setCountry(clickedCountry);
-        this.props.getData(clickedCountry);
+    
+    const handleClick = (clickedCountry) => {
+        setCountry(clickedCountry);
+        dispatch(getData(clickedCountry));
     }
+    
+    useEffect( ()=>dispatch(getData(selected)),[selected]);
 
-    componentDidMount() {
-        this.props.getData(this.state.selected);
-    }
-
-    render() {
-        const { selected } = this.state;
-        const { data, loading, error } = this.props;
         return (
             <>
                 <Header>
                     <Image countryCode={selected} />
                 </Header>
                 <Sidebar>
-                    {this.createButtons()}
+                    {createButtons()}
                 </Sidebar>
                 {loading && <Loading/>}
                 {!loading &&
@@ -72,20 +69,6 @@ class AppContainer extends React.Component {
                     />}
             </>
         )
-    }
 }
 
-const mapStateToProps = state => ({
-    data: state.data,
-    loading: state.loading,
-    error: state.error,
-});
-
-const mapDispatchToProps = {
-    getData
-};
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(AppContainer);
+export default AppContainer
